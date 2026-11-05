@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>탄력성을 지배하는 자 - 경제수학 경영 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; display: flex; flex-direction: column; min-height: 100vh; }
+        .flex-grow { flex-grow: 1; }
+        /* Custom Scrollbar for tables */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Modal Backdrop */
+        #modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; justify-content: center; align-items: center; }
+        #modal-backdrop.active { display: flex; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">📈 탄력성을 지배하는 자</h1>
+            <div id="user-info" class="text-sm font-semibold hidden"></div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8 relative">
+        
+        <!-- Loading State -->
+        <div id="loading-view" class="flex justify-center items-center h-64">
+            <div class="text-xl font-semibold text-slate-500 animate-pulse">시스템 초기화 중...</div>
+        </div>
+
+        <!-- Login View -->
+        <div id="login-view" class="hidden max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg border border-slate-200 mt-10">
+            <h2 class="text-2xl font-bold mb-6 text-center text-indigo-700">게임 접속</h2>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold mb-2 text-slate-700">역할 선택</label>
+                    <select id="role-select" class="w-full border-slate-300 rounded-lg shadow-sm px-4 py-3 bg-slate-50 border focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none transition">
+                        <option value="">선택해주세요</option>
+                        <option value="teacher">👨‍🏫 교사 (관리자)</option>
+                        <option value="team1">👥 1조</option>
+                        <option value="team2">👥 2조</option>
+                        <option value="team3">👥 3조</option>
+                        <option value="team4">👥 4조</option>
+                        <option value="team5">👥 5조</option>
+                    </select>
+                </div>
+                <button id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    접속하기
+                </button>
+            </div>
+        </div>
+
+        <!-- Teacher View -->
+        <div id="teacher-view" class="hidden space-y-6">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-800">관리자 대시보드</h2>
+                    <p class="text-slate-500 mt-1" id="teacher-round-info">현재 라운드 불러오는 중...</p>
+                </div>
+                <div class="space-x-2">
+                    <button id="btn-reset-game" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold shadow transition">게임 초기화</button>
+                    <button id="btn-download-logs" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition">기록 다운로드</button>
+                </div>
+            </div>
+
+            <!-- Team Status Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4" id="team-status-grid">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- Controls & Leaderboard -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Game Control -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-md border border-slate-200 flex flex-col justify-center items-center">
+                    <h3 class="text-xl font-bold mb-4 text-center">턴 제어</h3>
+                    <p class="text-sm text-slate-500 text-center mb-6">모든 조가 준비를 완료하면 다음 턴으로 진행할 수 있습니다.</p>
+                    <button id="btn-next-turn" disabled class="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg transition opacity-50 cursor-not-allowed hover:bg-indigo-700">
+                        결과 계산 및 다음 턴 진행
+                    </button>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold mb-4 text-slate-800">🏆 누적 수익 리더보드</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b-2 border-slate-200 text-slate-600">
+                                    <th class="pb-3 pl-2">순위</th>
+                                    <th class="pb-3">조 이름</th>
+                                    <th class="pb-3 text-right">누적 이윤(원)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student View -->
+        <div id="student-view" class="hidden space-y-6 max-w-3xl mx-auto">
+            
+            <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-indigo-500 flex justify-between items-center">
+                <div>
+                    <div class="text-sm font-bold text-indigo-500 mb-1" id="student-round-label">1라운드</div>
+                    <h2 class="text-2xl font-bold text-slate-800" id="student-team-name">조 이름</h2>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-slate-500 mb-1">누적 이윤</div>
+                    <div class="text-2xl font-extrabold text-emerald-600" id="student-cumulative-profit">0 원</div>
+                </div>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="student-game-over" class="hidden bg-white p-8 rounded-2xl shadow-md text-center">
+                <h2 class="text-3xl font-extrabold text-slate-800 mb-4">🎉 게임 종료!</h2>
+                <p class="text-slate-600 mb-6">모든 라운드가 종료되었습니다. 수고하셨습니다!</p>
+                <div class="text-xl font-bold">최종 누적 이윤: <span id="final-profit" class="text-indigo-600"></span></div>
+            </div>
+
+            <!-- Active Round View -->
+            <div id="student-active-round" class="space-y-6">
+                <!-- Scenario -->
+                <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                    <h3 class="text-lg font-bold text-indigo-900 mb-2" id="scenario-title">시나리오 제목</h3>
+                    <p class="text-slate-700 leading-relaxed" id="scenario-desc">시나리오 설명...</p>
+                    
+                    <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 bg-white p-4 rounded-xl border border-indigo-50">
+                        <div>
+                            <div class="text-xs text-slate-500 font-semibold">초기/기준 가격</div>
+                            <div class="font-bold text-slate-800">10,000 원</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500 font-semibold">기준 판매량</div>
+                            <div class="font-bold text-slate-800">1,000 개</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-red-500 font-semibold">단위당 원가 (이번 라운드)</div>
+                            <div class="font-bold text-red-600" id="scenario-cost">5,000 원</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+                    <h3 class="text-lg font-bold mb-4">💰 가격 결정</h3>
+                    <div id="input-section">
+                        <label class="block text-sm font-semibold mb-2 text-slate-700">이번 라운드의 새로운 가격을 입력하세요 (원)</label>
+                        <div class="flex space-x-4">
+                            <input type="number" id="input-price" class="flex-grow border-slate-300 rounded-xl shadow-sm px-4 py-3 bg-slate-50 border focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none text-lg" placeholder="예: 12000">
+                            <button id="btn-student-ready" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition whitespace-nowrap">
+                                준비 완료
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Waiting Status -->
+                    <div id="waiting-section" class="hidden text-center py-6 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                        <h4 class="text-lg font-bold text-indigo-600">준비 완료!</h4>
+                        <p class="text-slate-500 mt-1">입력한 가격: <span id="display-submitted-price" class="font-bold"></span>원</p>
+                        <p class="text-sm text-slate-400 mt-2">다른 조의 결정과 교사님의 진행을 기다리는 중입니다...</p>
+                    </div>
+                </div>
+
+                <!-- Previous Round Result -->
+                <div id="previous-result" class="hidden bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">📊 이전 라운드 결과</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-slate-50 p-3 rounded-lg text-center">
+                            <div class="text-xs text-slate-500 font-semibold mb-1">설정 가격</div>
+                            <div class="font-bold" id="res-price">-</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg text-center">
+                            <div class="text-xs text-slate-500 font-semibold mb-1">실제 판매량</div>
+                            <div class="font-bold" id="res-q">-</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg text-center">
+                            <div class="text-xs text-slate-500 font-semibold mb-1">총 수입</div>
+                            <div class="font-bold text-blue-600" id="res-revenue">-</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg text-center border border-slate-200 shadow-sm">
+                            <div class="text-xs text-slate-500 font-semibold mb-1">라운드 이윤</div>
+                            <div class="font-extrabold" id="res-profit">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 text-center py-6 mt-8">
+        <p class="text-sm">© 2026. 김성준(현대고등학교). 본 웹앱의 무단 전재 및 재배포를 금지합니다.</p>
+    </footer>
+
+    <!-- Simple Custom Modal -->
+    <div id="modal-backdrop">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+            <h3 id="modal-title" class="text-lg font-bold mb-2">알림</h3>
+            <p id="modal-msg" class="text-slate-600 mb-6"></p>
+            <button id="modal-close" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl">확인</button>
+        </div>
+    </div>
+  <script>
+        const __app_id = "elasticy-game-01"; // 원하시는 게임 방 이름 아무거나
+        const __firebase_config = JSON.stringify({
+           apiKey: "AIzaSyDVAZXAgs_hGqR42Y3WY_uDHr1mQT-RGfA",
+  authDomain: "elasticity-game.firebaseapp.com",
+  projectId: "elasticity-game",
+  storageBucket: "elasticity-game.firebasestorage.app",
+  messagingSenderId: "29752529552",
+  appId: "1:29752529552:web:93faf8b4c1a8ba587fbe15"
+
+        });
+    </script>
+    <!-- Firebase & Application Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // 1. Environment & Firebase Setup
+        // ==========================================
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let app, db, auth, currentUserId;
+        try {
+            app = initializeApp(JSON.parse(firebaseConfigStr));
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch (e) {
+            console.error("Firebase init failed:", e);
+        }
+
+        // ==========================================
+        // 2. Game Logic & Data Definition
+        // ==========================================
+        const TEAMS = [
+            { id: 'team1', name: '1조' },
+            { id: 'team2', name: '2조' },
+            { id: 'team3', name: '3조' },
+            { id: 'team4', name: '4조' },
+            { id: 'team5', name: '5조' }
+        ];
+
+        const SCENARIOS = [
+            {
+                round: 1,
+                title: "1라운드: 비탄력적 시장 (필수재)",
+                desc: "여러분이 독점 개발한 신약입니다. 대체재가 전혀 없어 가격을 올려도 소비자는 어쩔 수 없이 사야 합니다.",
+                baseCost: 5000,
+                calcQ: (P) => Math.max(0, 1500 - 0.05 * P)
+            },
+            {
+                round: 2,
+                title: "2라운드: 탄력적 시장 (경쟁 치열)",
+                desc: "경쟁사들이 비슷한 편의점 음료수를 쏟아내고 있습니다. 소비자는 언제든 다른 제품으로 갈아탈 준비가 되었습니다.",
+                baseCost: 5000,
+                calcQ: (P) => Math.max(0, 6000 - 0.5 * P)
+            },
+            {
+                round: 3,
+                title: "3라운드: 단위 탄력적 시장 & 원가 상승",
+                desc: "탄력성이 정확히 1인 시장입니다. (가격 변화율 = 수요량 변화율). 단, 글로벌 공급망 악화로 이번 라운드만 단위당 생산 원가가 8,000원으로 상승했습니다.",
+                baseCost: 8000,
+                calcQ: (P) => Math.max(0, 10000000 / Math.max(1, P)) // P*Q = 10,000,000
+            },
+            {
+                round: 4,
+                title: "4라운드: 블라인드 탄력성 (데이터 추론)",
+                desc: "신제품 출시! 수요 함수가 숨겨져 있습니다. 단서: '과거 A지역에서 10,000원이던 가격을 12,000원으로 올렸더니 판매량이 1,000개에서 900개로 줄어들었습니다.' 데이터를 분석하여 최적 가격을 설정하세요.",
+                baseCost: 5000,
+                calcQ: (P) => Math.max(0, 1400 - 0.04 * P)
+            }
+        ];
+
+        const TOTAL_ROUNDS = 4;
+        let currentRole = null; // 'teacher' or 'teamX'
+        let unsubscribeGameState = null;
+        let unsubscribeTeams = null;
+        let localTeamsData = {};
+        let localGameState = {};
+
+        // Utility: Format Currency
+        const formatMoney = (num) => new Intl.NumberFormat('ko-KR').format(Math.round(num));
+
+        // Custom Modal UI
+        const showModal = (title, message) => {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = message;
+            document.getElementById('modal-backdrop').classList.add('active');
+        };
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('modal-backdrop').classList.remove('active');
+        });
+
+        // ==========================================
+        // 3. UI Flow Control
+        // ==========================================
+        const hideAllViews = () => {
+            document.getElementById('loading-view').classList.add('hidden');
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('teacher-view').classList.add('hidden');
+            document.getElementById('student-view').classList.add('hidden');
+        };
+
+        const initApp = async () => {
+            hideAllViews();
+            document.getElementById('loading-view').classList.remove('hidden');
+
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUserId = auth.currentUser.uid;
+                hideAllViews();
+                document.getElementById('login-view').classList.remove('hidden');
+            } catch (error) {
+                console.error("Auth error:", error);
+                showModal("오류", "인증에 실패했습니다. 페이지를 새로고침 해주세요.");
+            }
+        };
+
+        // Login Action
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const role = document.getElementById('role-select').value;
+            if (!role) {
+                showModal("알림", "역할을 선택해주세요.");
+                return;
+            }
+            currentRole = role;
+            
+            // Update Header info
+            document.getElementById('user-info').classList.remove('hidden');
+            if (role === 'teacher') {
+                document.getElementById('user-info').innerText = "👨‍🏫 관리자 접속됨";
+                setupTeacherView();
+            } else {
+                const teamName = TEAMS.find(t => t.id === role).name;
+                document.getElementById('user-info').innerText = `👥 ${teamName} 접속됨`;
+                setupStudentView();
+            }
+        });
+
+        // ==========================================
+        // 4. Database Setup & Listeners
+        // ==========================================
+        const getGameStateRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'gameState', 'current');
+        const getTeamsColRef = () => collection(db, 'artifacts', appId, 'public', 'data', 'teams');
+        const getTeamRef = (teamId) => doc(db, 'artifacts', appId, 'public', 'data', 'teams', teamId);
+
+        // ==========================================
+        // 5. Teacher (Admin) Logic
+        // ==========================================
+        const setupTeacherView = () => {
+            hideAllViews();
+            document.getElementById('teacher-view').classList.remove('hidden');
+
+            // Listen to Game State
+            unsubscribeGameState = onSnapshot(getGameStateRef(), (docSnap) => {
+                if (docSnap.exists()) {
+                    localGameState = docSnap.data();
+                    updateTeacherDashboard();
+                } else {
+                    // Initialize if not exists
+                    resetGame();
+                }
+            }, (error) => console.error(error));
+
+            // Listen to Teams Data
+            unsubscribeTeams = onSnapshot(getTeamsColRef(), (snapshot) => {
+                localTeamsData = {};
+                snapshot.forEach(doc => {
+                    localTeamsData[doc.id] = doc.data();
+                });
+                updateTeacherDashboard();
+            }, (error) => console.error(error));
+        };
+
+        const updateTeacherDashboard = () => {
+            if (!localGameState.round) return;
+
+            // Round Info
+            const isGameOver = localGameState.round > TOTAL_ROUNDS;
+            document.getElementById('teacher-round-info').innerText = isGameOver 
+                ? "게임 종료" 
+                : `현재 ${localGameState.round}라운드 진행 중`;
+
+            // Team Status Grid
+            const grid = document.getElementById('team-status-grid');
+            grid.innerHTML = '';
+            
+            let allReady = true;
+            let teamsList = [];
+
+            TEAMS.forEach(teamDef => {
+                const teamData = localTeamsData[teamDef.id] || { ready: false, cumulativeProfit: 0 };
+                teamsList.push({...teamData, id: teamDef.id, name: teamDef.name});
+                
+                if (!teamData.ready && !isGameOver) allReady = false;
+
+                const bgClass = teamData.ready ? 'bg-green-500' : 'bg-red-500';
+                const statusText = teamData.ready ? '준비 완료' : '대기 중';
+                
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 text-center flex flex-col items-center">
+                        <div class="text-lg font-bold text-slate-800">${teamDef.name}</div>
+                        <div class="mt-3 px-3 py-1 rounded-full text-white text-xs font-bold ${bgClass} transition-colors">
+                            ${isGameOver ? '종료' : statusText}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Next Turn Button Logic
+            const btnNext = document.getElementById('btn-next-turn');
+            if (isGameOver) {
+                btnNext.disabled = true;
+                btnNext.classList.add('opacity-50', 'cursor-not-allowed');
+                btnNext.innerText = "게임 종료";
+            } else if (allReady && TEAMS.length > 0) {
+                btnNext.disabled = false;
+                btnNext.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnNext.innerText = "결과 계산 및 다음 턴 진행";
+            } else {
+                btnNext.disabled = true;
+                btnNext.classList.add('opacity-50', 'cursor-not-allowed');
+                btnNext.innerText = "조별 준비 대기 중...";
+            }
+
+            // Leaderboard Update
+            teamsList.sort((a, b) => b.cumulativeProfit - a.cumulativeProfit);
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+            teamsList.forEach((t, index) => {
+                const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index+1}`;
+                const profitClass = t.cumulativeProfit >= 0 ? 'text-indigo-600' : 'text-red-600';
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="py-3 pl-2 font-bold text-slate-500">${rankIcon}</td>
+                        <td class="py-3 font-semibold text-slate-800">${t.name}</td>
+                        <td class="py-3 text-right font-bold ${profitClass}">${formatMoney(t.cumulativeProfit)}</td>
+                    </tr>
+                `;
+            });
+        };
+
+        // Calculate Round & Progress
+        document.getElementById('btn-next-turn').addEventListener('click', async () => {
+            if (!auth.currentUser) return;
+            const currentRoundIndex = localGameState.round - 1;
+            const scenario = SCENARIOS[currentRoundIndex];
+            
+            try {
+                const batch = writeBatch(db);
+                
+                // Calculate for each team
+                TEAMS.forEach(teamDef => {
+                    const teamData = localTeamsData[teamDef.id];
+                    if (!teamData) return;
+
+                    const p = Number(teamData.currentPrice) || 0;
+                    const q = Math.round(scenario.calcQ(p)); // Quantity
+                    const rev = p * q; // Revenue
+                    const cost = scenario.baseCost * q; // Cost
+                    const profit = rev - cost; // Profit
+
+                    const historyEntry = {
+                        round: localGameState.round,
+                        price: p,
+                        quantity: q,
+                        revenue: rev,
+                        cost: cost,
+                        profit: profit
+                    };
+
+                    const newCumulative = (teamData.cumulativeProfit || 0) + profit;
+                    let history = teamData.history || [];
+                    history.push(historyEntry);
+
+                    const teamRef = getTeamRef(teamDef.id);
+                    batch.update(teamRef, {
+                        ready: false,
+                        currentPrice: 0,
+                        cumulativeProfit: newCumulative,
+                        history: history,
+                        lastResult: historyEntry // store to show directly
+                    });
+                });
+
+                // Update Game State
+                const nextRound = localGameState.round + 1;
+                batch.update(getGameStateRef(), { round: nextRound });
+
+                await batch.commit();
+                showModal("성공", `${localGameState.round}라운드 정산 완료!`);
+
+            } catch (error) {
+                console.error("Error advancing turn:", error);
+                showModal("오류", "계산 중 오류가 발생했습니다.");
+            }
+        });
+
+        // Reset Game Data
+        const resetGame = async () => {
+            if (!auth.currentUser) return;
+            if(!confirm("정말 게임을 초기화하시겠습니까? 모든 데이터가 삭제됩니다.")) return;
+
+            try {
+                const batch = writeBatch(db);
+                batch.set(getGameStateRef(), { round: 1 });
+                
+                TEAMS.forEach(t => {
+                    batch.set(getTeamRef(t.id), {
+                        name: t.name,
+                        ready: false,
+                        currentPrice: 0,
+                        cumulativeProfit: 0,
+                        history: [],
+                        lastResult: null
+                    });
+                });
+                
+                await batch.commit();
+                showModal("초기화 완료", "새로운 게임이 시작되었습니다.");
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        document.getElementById('btn-reset-game').addEventListener('click', resetGame);
+
+        // Download Logs CSV
+        document.getElementById('btn-download-logs').addEventListener('click', () => {
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM for excel
+            csvContent += "조 이름,라운드,설정가격,판매량,총수입,총비용,라운드이윤,누적이윤\n";
+
+            TEAMS.forEach(teamDef => {
+                const data = localTeamsData[teamDef.id];
+                if (!data || !data.history) return;
+                
+                let cumulative = 0;
+                data.history.forEach(h => {
+                    cumulative += h.profit;
+                    const row = [
+                        teamDef.name, 
+                        `${h.round}R`, 
+                        h.price, 
+                        h.quantity, 
+                        h.revenue, 
+                        h.cost, 
+                        h.profit, 
+                        cumulative
+                    ].join(",");
+                    csvContent += row + "\n";
+                });
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "경제수학_게임기록.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // ==========================================
+        // 6. Student (Team) Logic
+        // ==========================================
+        const setupStudentView = () => {
+            hideAllViews();
+            document.getElementById('student-view').classList.remove('hidden');
+            
+            const teamInfo = TEAMS.find(t => t.id === currentRole);
+            document.getElementById('student-team-name').innerText = teamInfo.name;
+
+            // Listen to Game State
+            unsubscribeGameState = onSnapshot(getGameStateRef(), (docSnap) => {
+                if (docSnap.exists()) {
+                    localGameState = docSnap.data();
+                    updateStudentUI();
+                }
+            }, (error) => console.error(error));
+
+            // Listen to My Team Data
+            unsubscribeTeams = onSnapshot(getTeamRef(currentRole), (docSnap) => {
+                if (docSnap.exists()) {
+                    localTeamsData[currentRole] = docSnap.data();
+                    updateStudentUI();
+                }
+            }, (error) => console.error(error));
+        };
+
+        const updateStudentUI = () => {
+            const teamData = localTeamsData[currentRole];
+            if (!localGameState.round || !teamData) return;
+
+            // Header update
+            document.getElementById('student-round-label').innerText = `${localGameState.round}라운드`;
+            
+            const pClass = teamData.cumulativeProfit >= 0 ? 'text-emerald-600' : 'text-red-500';
+            document.getElementById('student-cumulative-profit').className = `text-2xl font-extrabold ${pClass}`;
+            document.getElementById('student-cumulative-profit').innerText = formatMoney(teamData.cumulativeProfit) + " 원";
+
+            const isGameOver = localGameState.round > TOTAL_ROUNDS;
+
+            if (isGameOver) {
+                document.getElementById('student-active-round').classList.add('hidden');
+                document.getElementById('student-game-over').classList.remove('hidden');
+                document.getElementById('final-profit').innerText = formatMoney(teamData.cumulativeProfit) + " 원";
+                document.getElementById('final-profit').className = teamData.cumulativeProfit >= 0 ? 'text-emerald-600' : 'text-red-600';
+            } else {
+                document.getElementById('student-active-round').classList.remove('hidden');
+                document.getElementById('student-game-over').classList.add('hidden');
+
+                // Scenario update
+                const scenario = SCENARIOS[localGameState.round - 1];
+                document.getElementById('scenario-title').innerText = scenario.title;
+                document.getElementById('scenario-desc').innerText = scenario.desc;
+                document.getElementById('scenario-cost').innerText = formatMoney(scenario.baseCost) + " 원";
+
+                // Input / Ready status toggle
+                const inputSec = document.getElementById('input-section');
+                const waitSec = document.getElementById('waiting-section');
+                
+                if (teamData.ready) {
+                    inputSec.classList.add('hidden');
+                    waitSec.classList.remove('hidden');
+                    document.getElementById('display-submitted-price').innerText = formatMoney(teamData.currentPrice);
+                    document.getElementById('input-price').value = ''; // clear for next time
+                } else {
+                    inputSec.classList.remove('hidden');
+                    waitSec.classList.add('hidden');
+                }
+
+                // Previous Result update
+                const resSec = document.getElementById('previous-result');
+                if (teamData.lastResult && teamData.lastResult.round === localGameState.round - 1) {
+                    resSec.classList.remove('hidden');
+                    const r = teamData.lastResult;
+                    document.getElementById('res-price').innerText = formatMoney(r.price) + "원";
+                    document.getElementById('res-q').innerText = formatMoney(r.quantity) + "개";
+                    document.getElementById('res-revenue').innerText = formatMoney(r.revenue) + "원";
+                    
+                    const pElem = document.getElementById('res-profit');
+                    pElem.innerText = formatMoney(r.profit) + "원";
+                    pElem.className = r.profit >= 0 ? "font-extrabold text-emerald-600" : "font-extrabold text-red-600";
+                } else {
+                    resSec.classList.add('hidden');
+                }
+            }
+        };
+
+        // Submit Price
+        document.getElementById('btn-student-ready').addEventListener('click', async () => {
+            if (!auth.currentUser) return;
+            const priceInput = document.getElementById('input-price').value;
+            const price = Number(priceInput);
+
+            if (!priceInput || isNaN(price) || price < 0) {
+                showModal("입력 오류", "정상적인 가격(숫자)을 입력해주세요.");
+                return;
+            }
+
+            try {
+                await updateDoc(getTeamRef(currentRole), {
+                    currentPrice: price,
+                    ready: true
+                });
+            } catch (e) {
+                console.error("Error setting ready:", e);
+                showModal("오류", "데이터 전송 중 오류가 발생했습니다.");
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
