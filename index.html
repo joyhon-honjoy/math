@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>탄력성을 지배하는 자 - 경제수학 경영 게임</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; display: flex; flex-direction: column; min-height: 100vh; }
@@ -18,6 +20,7 @@
         /* Modal Backdrop */
         #modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; justify-content: center; align-items: center; }
         #modal-backdrop.active { display: flex; }
+        #modal-msg { white-space: pre-wrap; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -107,6 +110,14 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Ranking Chart -->
+                <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-md border border-slate-200 mt-2">
+                    <h3 class="text-xl font-bold mb-4 text-slate-800">📈 누적 수익 그래프</h3>
+                    <div class="w-full" style="height: 300px;">
+                        <canvas id="ranking-chart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -173,6 +184,9 @@
                         <h4 class="text-lg font-bold text-indigo-600">준비 완료!</h4>
                         <p class="text-slate-500 mt-1">입력한 가격: <span id="display-submitted-price" class="font-bold"></span>원</p>
                         <p class="text-sm text-slate-400 mt-2">다른 조의 결정과 교사님의 진행을 기다리는 중입니다...</p>
+                        <button id="btn-student-cancel" class="mt-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-6 rounded-xl shadow transition">
+                            준비 취소 및 수정
+                        </button>
                     </div>
                 </div>
 
@@ -216,7 +230,9 @@
             <button id="modal-close" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl">확인</button>
         </div>
     </div>
-  <script>
+ 
+
+ <script>
         const __app_id = "elasticy-game-01"; // 원하시는 게임 방 이름 아무거나
         const __firebase_config = JSON.stringify({
            apiKey: "AIzaSyDVAZXAgs_hGqR42Y3WY_uDHr1mQT-RGfA",
@@ -228,6 +244,7 @@
 
         });
     </script>
+
     <!-- Firebase & Application Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -289,18 +306,71 @@
                 desc: "신제품 출시! 수요 함수가 숨겨져 있습니다. 단서: '과거 A지역에서 10,000원이던 가격을 12,000원으로 올렸더니 판매량이 1,000개에서 900개로 줄어들었습니다.' 데이터를 분석하여 최적 가격을 설정하세요.",
                 baseCost: 5000,
                 calcQ: (P) => Math.max(0, 1400 - 0.04 * P)
+            },
+            {
+                round: 5,
+                title: "5라운드: 완전 비탄력적 시장 (생명유지 장치)",
+                desc: "이 장치가 없으면 생존이 불가능한 필수 의료기기입니다. 가격이 얼마든 수요량은 일정하게 유지됩니다.",
+                baseCost: 4000,
+                calcQ: (P) => 800 // 고정 수요
+            },
+            {
+                round: 6,
+                title: "6라운드: 고탄력적 사치품 시장",
+                desc: "대체재가 무수히 많은 고가의 사치품입니다. 가격을 조금만 올려도 소비자들이 등을 돌립니다.",
+                baseCost: 6000,
+                calcQ: (P) => Math.max(0, 12000 - 0.8 * P)
+            },
+            {
+                round: 7,
+                title: "7라운드: 베블런 효과 (예외적 수요)",
+                desc: "과시욕을 자극하는 한정판 명품입니다. 가격이 오를수록 오히려 수요가 증가하는 기현상이 발생합니다.",
+                baseCost: 10000,
+                calcQ: (P) => Math.min(2000, Math.max(0, 500 + 0.02 * P)) // 최대 판매량 2000개 제한
+            },
+            {
+                round: 8,
+                title: "8라운드: 기술 혁신 (원가 폭락)",
+                desc: "획기적인 공정 개선으로 단위당 생산 원가가 1,000원으로 대폭락했습니다. 시장 점유율을 늘릴 기회입니다.",
+                baseCost: 1000,
+                calcQ: (P) => Math.max(0, 5000 - 0.2 * P)
+            },
+            {
+                round: 9,
+                title: "9라운드: 블라인드 탄력성 2",
+                desc: "단서: '과거 가격을 5,000원에서 6,000원으로 올렸더니 판매량이 2,000개에서 1,500개로 급감했습니다.' 최적의 가격을 찾으세요.",
+                baseCost: 2000,
+                calcQ: (P) => Math.max(0, 4500 - 0.5 * P)
+            },
+            {
+                round: 10,
+                title: "10라운드: 최종 국면 (극단적 과점 시장)",
+                desc: "마지막 라운드입니다. 소비자의 반응이 꽤 민감한 거대한 시장이 열렸습니다. 유종의 미를 거두세요!",
+                baseCost: 5000,
+                calcQ: (P) => Math.max(0, 8000 - 0.3 * P)
             }
         ];
 
-        const TOTAL_ROUNDS = 4;
+        const TOTAL_ROUNDS = 10;
         let currentRole = null; // 'teacher' or 'teamX'
         let unsubscribeGameState = null;
         let unsubscribeTeams = null;
         let localTeamsData = {};
         let localGameState = {};
+        let teacherChart = null; // 랭킹 차트 인스턴스
+        let lastShownRoundResult = 0; // 학생용 마지막 팝업 라운드 추적
 
         // Utility: Format Currency
         const formatMoney = (num) => new Intl.NumberFormat('ko-KR').format(Math.round(num));
+
+        // Sound Effect
+        const playSuccessSound = () => {
+            try {
+                const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                const now = Tone.now();
+                synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
+            } catch(e) { console.error("Sound error", e); }
+        };
 
         // Custom Modal UI
         const showModal = (title, message) => {
@@ -342,7 +412,9 @@
         };
 
         // Login Action
-        document.getElementById('btn-login').addEventListener('click', () => {
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            await Tone.start(); // 오디오 컨텍스트 시작 허용
+
             const role = document.getElementById('role-select').value;
             if (!role) {
                 showModal("알림", "역할을 선택해주세요.");
@@ -463,13 +535,47 @@
                     </tr>
                 `;
             });
+
+            // Update Ranking Chart
+            const ctx = document.getElementById('ranking-chart').getContext('2d');
+            const maxRoundChart = Math.max(localGameState.round - 1, 1);
+            const labels = Array.from({length: maxRoundChart}, (_, i) => `${i + 1}R`);
+            const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'];
+            
+            const datasets = TEAMS.map((team, idx) => {
+                const data = localTeamsData[team.id];
+                return {
+                    label: team.name,
+                    data: data?.history?.map(h => h.cumulative) || [],
+                    borderColor: colors[idx % colors.length],
+                    backgroundColor: colors[idx % colors.length],
+                    fill: false,
+                    tension: 0.1
+                };
+            });
+
+            if (teacherChart) {
+                teacherChart.data.labels = labels;
+                teacherChart.data.datasets = datasets;
+                teacherChart.update();
+            } else {
+                teacherChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
         };
 
         // Calculate Round & Progress
         document.getElementById('btn-next-turn').addEventListener('click', async () => {
             if (!auth.currentUser) return;
-            const currentRoundIndex = localGameState.round - 1;
-            const scenario = SCENARIOS[currentRoundIndex];
+            const finishedRound = localGameState.round;
+            const scenario = SCENARIOS[finishedRound - 1];
             
             try {
                 const batch = writeBatch(db);
@@ -484,17 +590,18 @@
                     const rev = p * q; // Revenue
                     const cost = scenario.baseCost * q; // Cost
                     const profit = rev - cost; // Profit
+                    const newCumulative = (teamData.cumulativeProfit || 0) + profit;
 
                     const historyEntry = {
-                        round: localGameState.round,
+                        round: finishedRound,
                         price: p,
                         quantity: q,
                         revenue: rev,
                         cost: cost,
-                        profit: profit
+                        profit: profit,
+                        cumulative: newCumulative
                     };
 
-                    const newCumulative = (teamData.cumulativeProfit || 0) + profit;
                     let history = teamData.history || [];
                     history.push(historyEntry);
 
@@ -509,11 +616,11 @@
                 });
 
                 // Update Game State
-                const nextRound = localGameState.round + 1;
+                const nextRound = finishedRound + 1;
                 batch.update(getGameStateRef(), { round: nextRound });
 
                 await batch.commit();
-                showModal("성공", `${localGameState.round -1}라운드 정산 완료!`);
+                showModal("성공", `${finishedRound}라운드 정산 완료!`);
 
             } catch (error) {
                 console.error("Error advancing turn:", error);
@@ -665,6 +772,20 @@
                     const pElem = document.getElementById('res-profit');
                     pElem.innerText = formatMoney(r.profit) + "원";
                     pElem.className = r.profit >= 0 ? "font-extrabold text-emerald-600" : "font-extrabold text-red-600";
+
+                    // 새 라운드 결과 팝업 표시 (아직 안 보여줬을 경우)
+                    if (r.round > lastShownRoundResult) {
+                        lastShownRoundResult = r.round;
+                        playSuccessSound();
+                        
+                        const unitCost = SCENARIOS[r.round-1].baseCost;
+                        const formula = `(${formatMoney(r.price)}원 × ${formatMoney(r.quantity)}개) - (${formatMoney(unitCost)}원 × ${formatMoney(r.quantity)}개) = ${formatMoney(r.profit)}원`;
+                        
+                        // UI 업데이트가 화면에 반영될 수 있도록 짧은 지연 후 팝업 띄우기
+                        setTimeout(() => {
+                            showModal(`🎉 ${r.round}라운드 수익 정산`, `이번 라운드 이윤: ${formatMoney(r.profit)}원\n\n[수익 계산식]\n(가격 × 판매량) - 총비용 = 이윤\n${formula}`);
+                        }, 300);
+                    }
                 } else {
                     resSec.classList.add('hidden');
                 }
@@ -690,6 +811,16 @@
             } catch (e) {
                 console.error("Error setting ready:", e);
                 showModal("오류", "데이터 전송 중 오류가 발생했습니다.");
+            }
+        });
+
+        // Cancel Ready Status (준비 취소)
+        document.getElementById('btn-student-cancel').addEventListener('click', async () => {
+            if (!auth.currentUser) return;
+            try {
+                await updateDoc(getTeamRef(currentRole), { ready: false });
+            } catch (e) {
+                console.error("Error canceling ready:", e);
             }
         });
 
