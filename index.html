@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -121,15 +122,34 @@
             <div id="teacher-scenario-info" class="workspace-card p-6 border-l-4 border-l-slate-800">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">현재 진행중인 시장 시나리오</h3>
                 <h4 class="text-lg font-bold text-slate-900 mb-2" id="teacher-scenario-title"></h4>
-                <p class="text-sm text-slate-600 leading-relaxed" id="teacher-scenario-desc"></p>
+                <p class="text-sm text-slate-600 leading-relaxed mb-5" id="teacher-scenario-desc"></p>
+                
+                <!-- Added Scenario Details to Teacher View -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 border-t border-slate-100 pt-5">
+                    <div>
+                        <div class="text-xs text-slate-400 font-semibold uppercase mb-1">기준 가격</div>
+                        <div class="font-bold text-slate-800 text-base">10,000 원</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-semibold uppercase mb-1">기준 판매량</div>
+                        <div class="font-bold text-slate-800 text-base">1,000 개</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg border border-red-100 -mt-3">
+                        <div class="text-xs text-red-500 font-bold uppercase mb-1 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>
+                            단위당 생산 원가
+                        </div>
+                        <div class="font-black text-red-700 text-base" id="teacher-scenario-cost">-</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Game Over Report Downloads (Teacher) -->
-            <div id="teacher-game-over-actions" class="hidden workspace-card p-6 border-t-4 border-t-emerald-500 bg-emerald-50/30">
+            <!-- Interim / Final Report Downloads (Teacher) -->
+            <div id="teacher-report-actions" class="hidden workspace-card p-6 border-t-4 border-t-blue-500 bg-blue-50/30">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900">모든 라운드 종료</h3>
-                        <p class="text-sm text-slate-600">각 팀별 최종 투자 성과 보고서(Annual Report)를 다운로드할 수 있습니다.</p>
+                        <h3 class="text-lg font-bold text-slate-900" id="teacher-report-heading">보고서 다운로드</h3>
+                        <p class="text-sm text-slate-600">각 팀별 투자 성과 보고서(Report)를 개별 다운로드할 수 있습니다.</p>
                     </div>
                     <div class="flex flex-wrap gap-2" id="teacher-download-buttons">
                         <!-- Buttons injected via JS -->
@@ -142,7 +162,7 @@
                 <!-- Dynamically populated -->
             </div>
 
-            <!-- Controls & Leaderboard -->
+            <!-- Controls & Dual Leaderboard -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Game Control -->
                 <div class="lg:col-span-1 workspace-card p-6 flex flex-col justify-center items-center bg-slate-50/50">
@@ -153,31 +173,56 @@
                     </button>
                 </div>
 
-                <!-- Leaderboard -->
-                <div class="lg:col-span-2 workspace-card p-6">
-                    <h3 class="text-base font-bold mb-4 text-slate-900 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        실시간 누적 수익 랭킹
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-200 text-slate-500">
-                                    <th class="pb-2 font-semibold w-16 text-center">순위</th>
-                                    <th class="pb-2 font-semibold">팀명</th>
-                                    <th class="pb-2 font-semibold text-right">누적 이윤(원)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaderboard-body" class="divide-y divide-slate-100">
-                                <!-- Dynamically populated -->
-                            </tbody>
-                        </table>
+                <!-- Leaderboards (Cumulative & Previous Quarter) -->
+                <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Cumulative Leaderboard -->
+                    <div class="workspace-card p-6">
+                        <h3 class="text-sm font-bold mb-4 text-slate-900 flex items-center gap-2 uppercase tracking-wider">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            전체 누적 이윤 랭킹
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-slate-500">
+                                        <th class="pb-2 font-semibold w-10 text-center">순위</th>
+                                        <th class="pb-2 font-semibold">팀명</th>
+                                        <th class="pb-2 font-semibold text-right">총 누적 이윤</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboard-cumulative-body" class="divide-y divide-slate-100">
+                                    <!-- Dynamically populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Quarterly Leaderboard -->
+                    <div class="workspace-card p-6 border-l-4 border-slate-300 bg-slate-50/50">
+                        <h3 class="text-sm font-bold mb-4 text-slate-900 flex items-center gap-2 uppercase tracking-wider" id="leaderboard-quarter-title">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            직전 분기 순이익 랭킹
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-slate-500">
+                                        <th class="pb-2 font-semibold w-10 text-center">순위</th>
+                                        <th class="pb-2 font-semibold">팀명</th>
+                                        <th class="pb-2 font-semibold text-right">분기 순이익</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboard-quarter-body" class="divide-y divide-slate-100">
+                                    <!-- Dynamically populated -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Ranking Chart -->
                 <div class="lg:col-span-3 workspace-card p-6">
-                    <h3 class="text-base font-bold mb-4 text-slate-900">분기별 수익 추이</h3>
+                    <h3 class="text-base font-bold mb-4 text-slate-900">누적 이윤 추이 (Quarterly Performance)</h3>
                     <div class="w-full" style="height: 320px;">
                         <canvas id="ranking-chart"></canvas>
                     </div>
@@ -535,33 +580,35 @@
             document.getElementById('teacher-round-badge').innerText = isGameOver ? "종료됨" : `Q${localGameState.round}`;
             document.getElementById('teacher-round-info').innerText = isGameOver ? "회계연도 전체 종료" : "현재 의사결정 대기중";
 
-            // Scenario Info Update (Req 2)
+            // Scenario Info Update with Detailed Info (Req 3)
             const scenarioInfoEl = document.getElementById('teacher-scenario-info');
             if (!isGameOver && currentScenario) {
                 scenarioInfoEl.classList.remove('hidden');
                 document.getElementById('teacher-scenario-title').innerText = currentScenario.title;
                 document.getElementById('teacher-scenario-desc').innerText = currentScenario.desc;
+                document.getElementById('teacher-scenario-cost').innerText = formatMoney(currentScenario.baseCost) + " 원";
             } else {
                 scenarioInfoEl.classList.add('hidden');
             }
 
-            // Game Over Downloads (Req 2)
-            const gameOverActionsEl = document.getElementById('teacher-game-over-actions');
-            if (isGameOver) {
-                gameOverActionsEl.classList.remove('hidden');
+            // Interim & Final Reports Download (Req 2)
+            const reportActionsEl = document.getElementById('teacher-report-actions');
+            if (localGameState.round > 1) {
+                reportActionsEl.classList.remove('hidden');
+                document.getElementById('teacher-report-heading').innerText = isGameOver ? "최종 성과 보고서 다운로드" : `Q${localGameState.round - 1} 중간 투자 보고서 다운로드`;
+                
                 const btnContainer = document.getElementById('teacher-download-buttons');
                 btnContainer.innerHTML = '';
                 TEAMS.forEach(teamDef => {
                     const btn = document.createElement('button');
-                    // Apply theme classes to download buttons
                     const theme = TEAM_THEMES[teamDef.id];
                     btn.className = `text-xs font-bold text-white py-2 px-3 rounded shadow-sm transition ${theme.bg} ${theme.hover}`;
-                    btn.innerText = `${teamDef.name} 보고서`;
-                    btn.onclick = () => downloadReport(teamDef.id);
+                    btn.innerText = `${teamDef.name} ${isGameOver ? '최종' : '중간'} 보고서`;
+                    btn.onclick = () => downloadReport(teamDef.id, isGameOver);
                     btnContainer.appendChild(btn);
                 });
             } else {
-                gameOverActionsEl.classList.add('hidden');
+                reportActionsEl.classList.add('hidden');
             }
 
             // Grid Update
@@ -571,7 +618,7 @@
             let teamsList = [];
 
             TEAMS.forEach(teamDef => {
-                const teamData = localTeamsData[teamDef.id] || { ready: false, cumulativeProfit: 0 };
+                const teamData = localTeamsData[teamDef.id] || { ready: false, cumulativeProfit: 0, lastResult: null };
                 teamsList.push({...teamData, id: teamDef.id, name: teamDef.name});
                 if (!teamData.ready && !isGameOver) allReady = false;
                 
@@ -605,20 +652,50 @@
                 btnNext.innerText = "각 부서(조) 결재 대기 중...";
             }
 
-            // Leaderboard
-            teamsList.sort((a, b) => b.cumulativeProfit - a.cumulativeProfit);
-            const tbody = document.getElementById('leaderboard-body');
-            tbody.innerHTML = '';
-            teamsList.forEach((t, idx) => {
+            // Dual Leaderboards (Req 1)
+            // 1. Cumulative Leaderboard
+            const sortedByCumulative = [...teamsList].sort((a, b) => b.cumulativeProfit - a.cumulativeProfit);
+            const cumulativeBody = document.getElementById('leaderboard-cumulative-body');
+            cumulativeBody.innerHTML = '';
+            sortedByCumulative.forEach((t, idx) => {
                 const profitColor = t.cumulativeProfit >= 0 ? 'text-emerald-600' : 'text-red-500';
-                tbody.innerHTML += `
+                cumulativeBody.innerHTML += `
                     <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
-                        <td class="py-3 text-center text-slate-400 font-bold">${idx + 1}</td>
-                        <td class="py-3 font-semibold text-slate-800">${t.name}</td>
-                        <td class="py-3 text-right font-bold ${profitColor}">${formatMoney(t.cumulativeProfit)}</td>
+                        <td class="py-2.5 text-center text-slate-400 font-bold">${idx + 1}</td>
+                        <td class="py-2.5 font-semibold text-slate-800">${t.name}</td>
+                        <td class="py-2.5 text-right font-bold ${profitColor}">${formatMoney(t.cumulativeProfit)}</td>
                     </tr>
                 `;
             });
+
+            // 2. Previous Quarter Leaderboard
+            const quarterTitle = document.getElementById('leaderboard-quarter-title');
+            const quarterBody = document.getElementById('leaderboard-quarter-body');
+            quarterBody.innerHTML = '';
+            
+            if (localGameState.round > 1) {
+                quarterTitle.innerHTML = `<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Q${localGameState.round - 1} 분기 순이익 랭킹`;
+                const sortedByQuarter = [...teamsList].sort((a, b) => {
+                    const profitA = a.lastResult ? a.lastResult.profit : 0;
+                    const profitB = b.lastResult ? b.lastResult.profit : 0;
+                    return profitB - profitA;
+                });
+                
+                sortedByQuarter.forEach((t, idx) => {
+                    const qProfit = t.lastResult ? t.lastResult.profit : 0;
+                    const profitColor = qProfit >= 0 ? 'text-emerald-600' : 'text-red-500';
+                    quarterBody.innerHTML += `
+                        <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
+                            <td class="py-2.5 text-center text-slate-400 font-bold">${idx + 1}</td>
+                            <td class="py-2.5 font-semibold text-slate-800">${t.name}</td>
+                            <td class="py-2.5 text-right font-bold ${profitColor}">${formatMoney(qProfit)}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                quarterTitle.innerHTML = `<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> 직전 분기 순이익 랭킹`;
+                quarterBody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-400">아직 정산된 분기 데이터가 없습니다.</td></tr>`;
+            }
 
             // Chart Update (Req 1 Colors)
             const ctx = document.getElementById('ranking-chart').getContext('2d');
@@ -846,7 +923,7 @@
         // ==========================================
         // Refactored Report Logic (Req 2 & 3)
         // ==========================================
-        const generateReportHTML = (teamInfo, teamData) => {
+        const generateReportHTML = (teamInfo, teamData, isFinal) => {
             let rowsHTML = '';
             teamData.history.forEach(h => {
                 const scenario = SCENARIOS[h.round - 1];
@@ -876,13 +953,17 @@
 
             const finalColor = teamData.cumulativeProfit >= 0 ? '#059669' : '#dc2626';
             const themeColor = TEAM_THEMES[teamInfo.id]?.chart || '#1e293b';
+            
+            // 제목 및 메타 데이터 동적 설정
+            const reportTitle = isFinal ? "ANNUAL REPORT 2026" : `INTERIM REPORT (Q${teamData.history.length})`;
+            const reportTypeStr = isFinal ? "최종 결산서" : `Q${teamData.history.length} 중간 결산서`;
 
             return `
             <!DOCTYPE html>
             <html lang="ko">
             <head>
                 <meta charset="UTF-8">
-                <title>Annual Report - ${teamInfo.name}</title>
+                <title>${isFinal ? 'Annual' : 'Interim'} Report - ${teamInfo.name}</title>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
                 <style>
                     body { font-family: 'Inter', -apple-system, sans-serif; background-color: #f1f5f9; padding: 40px 20px; color: #0f172a; margin: 0; }
@@ -915,10 +996,10 @@
             <body>
                 <div class="page-container">
                     <div class="header-section">
-                        <h1>ANNUAL REPORT 2026</h1>
+                        <h1>${reportTitle}</h1>
                         <div class="doc-meta">
                             CONFIDENTIAL<br>
-                            현대고등학교 경제수학 결산서
+                            현대고등학교 경제수학 ${reportTypeStr}
                         </div>
                     </div>
                     
@@ -928,7 +1009,7 @@
                             <div class="team-name">${teamInfo.name}</div>
                         </div>
                         <div class="profit-section">
-                            <div class="title" style="margin-bottom: 5px;">Total Net Income (최종 누적 이윤)</div>
+                            <div class="title" style="margin-bottom: 5px;">Total Net Income (누적 이윤)</div>
                             <div class="profit-val">${formatMoney(teamData.cumulativeProfit)} ₩</div>
                         </div>
                     </div>
@@ -961,7 +1042,7 @@
             `;
         };
 
-        const downloadReport = (teamId) => {
+        const downloadReport = (teamId, isFinal = true) => {
             const teamInfo = TEAMS.find(t => t.id === teamId);
             const teamData = localTeamsData[teamId];
             if (!teamData || !teamData.history || teamData.history.length === 0) {
@@ -969,21 +1050,23 @@
                 return;
             }
             
-            const html = generateReportHTML(teamInfo, teamData);
+            const html = generateReportHTML(teamInfo, teamData, isFinal);
             const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
+            
+            const fileName = isFinal ? `Annual_Report_${teamInfo.name}.html` : `Interim_Report_Q${teamData.history.length}_${teamInfo.name}.html`;
             link.setAttribute("href", url);
-            link.setAttribute("download", `Annual_Report_${teamInfo.name}.html`);
+            link.setAttribute("download", fileName);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         };
 
-        // Attach download event to student view button
+        // Attach download event to student view button (always true for students as they see this only at the end)
         document.getElementById('btn-student-download-report').addEventListener('click', () => {
-            downloadReport(currentRole);
+            downloadReport(currentRole, true);
         });
 
         // Initialize on load
