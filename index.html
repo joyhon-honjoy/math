@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>탄력성을 지배하는 자 - 경제수학 경영 게임</title>
+    <title>탄력성을 지배하는 자 - 경제수학 시뮬레이션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -77,23 +77,23 @@
         <div id="login-view" class="hidden max-w-md mx-auto workspace-card p-8 mt-12">
             <div class="text-center mb-8">
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">현대고등학교 2026학년도 2학기 경제수학</p>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">워크스페이스 접속</h2>
+                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">시장 접속</h2>
             </div>
             <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-semibold mb-2 text-slate-700">역할(팀) 선택</label>
+                    <label class="block text-sm font-semibold mb-2 text-slate-700">역할(기업) 선택</label>
                     <select id="role-select" class="w-full border-slate-200 rounded-lg shadow-sm px-4 py-3 bg-slate-50 border focus:border-slate-800 focus:ring focus:ring-slate-200 outline-none transition">
                         <option value="">선택해주세요</option>
-                        <option value="teacher">👨‍💼 경영진 (교사/관리자)</option>
-                        <option value="team1">🔴 1조 (Red Team)</option>
-                        <option value="team2">🟠 2조 (Orange Team)</option>
-                        <option value="team3">🟡 3조 (Yellow Team)</option>
-                        <option value="team4">🟢 4조 (Green Team)</option>
-                        <option value="team5">🔵 5조 (Blue Team)</option>
+                        <option value="teacher">👨‍💼 진행자 (교사/관리자)</option>
+                        <option value="team1">🔴 1조 (Red 기업)</option>
+                        <option value="team2">🟠 2조 (Orange 기업)</option>
+                        <option value="team3">🟡 3조 (Yellow 기업)</option>
+                        <option value="team4">🟢 4조 (Green 기업)</option>
+                        <option value="team5">🔵 5조 (Blue 기업)</option>
                     </select>
                 </div>
                 <div id="password-section" class="hidden">
-                    <label class="block text-sm font-semibold mb-2 text-slate-700">관리자 보안코드</label>
+                    <label class="block text-sm font-semibold mb-2 text-slate-700">진행자 보안코드</label>
                     <input type="password" id="admin-password" class="w-full border-slate-200 rounded-lg shadow-sm px-4 py-3 bg-slate-50 border focus:border-slate-800 focus:ring focus:ring-slate-200 outline-none transition" placeholder="비밀번호 입력">
                 </div>
                 <button id="btn-login" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 px-4 rounded-lg shadow transition disabled:opacity-50 mt-4">
@@ -106,7 +106,7 @@
         <div id="teacher-view" class="hidden space-y-6">
             <div class="flex justify-between items-end mb-2">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">경영진 대시보드</h2>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">진행자 대시보드</h2>
                     <div class="flex items-center gap-2 mt-2">
                         <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-white" id="teacher-round-badge">로딩중</span>
                         <p class="text-sm text-slate-500 font-medium" id="teacher-round-info"></p>
@@ -124,7 +124,6 @@
                 <h4 class="text-lg font-bold text-slate-900 mb-2" id="teacher-scenario-title"></h4>
                 <p class="text-sm text-slate-600 leading-relaxed mb-5" id="teacher-scenario-desc"></p>
                 
-                <!-- Added Scenario Details to Teacher View -->
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4 border-t border-slate-100 pt-5">
                     <div>
                         <div class="text-xs text-slate-400 font-semibold uppercase mb-1">기준 가격</div>
@@ -149,7 +148,7 @@
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-lg font-bold text-slate-900" id="teacher-report-heading">보고서 다운로드</h3>
-                        <p class="text-sm text-slate-600">각 팀별 투자 성과 보고서(Report)를 개별 다운로드할 수 있습니다.</p>
+                        <p class="text-sm text-slate-600">각 기업별 투자 성과 보고서(Report)를 개별 다운로드할 수 있습니다.</p>
                     </div>
                     <div class="flex flex-wrap gap-2" id="teacher-download-buttons">
                         <!-- Buttons injected via JS -->
@@ -166,16 +165,15 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Game Control -->
                 <div class="lg:col-span-1 workspace-card p-6 flex flex-col justify-center items-center bg-slate-50/50">
-                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">턴 제어 시스템</h3>
-                    <p class="text-xs text-slate-500 text-center mb-6">모든 부서(조)가 의사결정을 완료하면 다음 분기로 넘어갑니다.</p>
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">진행자 턴 제어 시스템</h3>
+                    <p class="text-xs text-slate-500 text-center mb-6">모든 기업이 가격 고시를 완료하면 다음 분기로 넘어갑니다.</p>
                     <button id="btn-next-turn" disabled class="w-full py-4 bg-slate-800 text-white font-bold rounded-xl shadow-md transition opacity-50 cursor-not-allowed hover:bg-slate-900">
-                        결과 산출 및 턴 진행
+                        시장 결과 산출 및 턴 진행
                     </button>
                 </div>
 
-                <!-- Leaderboards (Cumulative & Previous Quarter) -->
+                <!-- Leaderboards -->
                 <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Cumulative Leaderboard -->
                     <div class="workspace-card p-6">
                         <h3 class="text-sm font-bold mb-4 text-slate-900 flex items-center gap-2 uppercase tracking-wider">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -186,18 +184,16 @@
                                 <thead>
                                     <tr class="border-b border-slate-200 text-slate-500">
                                         <th class="pb-2 font-semibold w-10 text-center">순위</th>
-                                        <th class="pb-2 font-semibold">팀명</th>
+                                        <th class="pb-2 font-semibold">기업명</th>
                                         <th class="pb-2 font-semibold text-right">총 누적 이윤</th>
                                     </tr>
                                 </thead>
                                 <tbody id="leaderboard-cumulative-body" class="divide-y divide-slate-100">
-                                    <!-- Dynamically populated -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
                     
-                    <!-- Quarterly Leaderboard -->
                     <div class="workspace-card p-6 border-l-4 border-slate-300 bg-slate-50/50">
                         <h3 class="text-sm font-bold mb-4 text-slate-900 flex items-center gap-2 uppercase tracking-wider" id="leaderboard-quarter-title">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
@@ -208,12 +204,11 @@
                                 <thead>
                                     <tr class="border-b border-slate-200 text-slate-500">
                                         <th class="pb-2 font-semibold w-10 text-center">순위</th>
-                                        <th class="pb-2 font-semibold">팀명</th>
+                                        <th class="pb-2 font-semibold">기업명</th>
                                         <th class="pb-2 font-semibold text-right">분기 순이익</th>
                                     </tr>
                                 </thead>
                                 <tbody id="leaderboard-quarter-body" class="divide-y divide-slate-100">
-                                    <!-- Dynamically populated -->
                                 </tbody>
                             </table>
                         </div>
@@ -238,7 +233,7 @@
                 <div>
                     <div class="flex items-center gap-2 mb-1">
                         <span id="student-round-badge" class="px-2 py-0.5 rounded text-xs font-bold text-white"></span>
-                        <span class="text-sm font-semibold text-slate-500">경영 대시보드</span>
+                        <span class="text-sm font-semibold text-slate-500">기업 대시보드</span>
                     </div>
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="student-team-name">조 이름</h2>
                 </div>
@@ -305,11 +300,11 @@
                     <h3 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">Decision Making</h3>
                     
                     <div id="input-section">
-                        <label class="block text-sm font-semibold mb-3 text-slate-800">이번 분기의 신규 판매 가격을 설정하세요 (원)</label>
+                        <label class="block text-sm font-semibold mb-3 text-slate-800">이번 분기의 신규 판매 가격을 고시하세요 (원)</label>
                         <div class="flex flex-col sm:flex-row gap-3">
                             <input type="number" id="input-price" class="flex-grow border-slate-300 rounded-lg shadow-sm px-4 py-3 bg-white border focus:outline-none focus:ring-2 text-lg font-medium transition-shadow" placeholder="예: 12000">
                             <button id="btn-student-ready" class="text-white font-bold py-3 px-8 rounded-lg shadow transition whitespace-nowrap">
-                                결재 상신 (준비 완료)
+                                가격 고시 (준비 완료)
                             </button>
                         </div>
                     </div>
@@ -317,18 +312,23 @@
                     <!-- Waiting Status -->
                     <div id="waiting-section" class="hidden text-center py-10 bg-slate-50 rounded-xl border border-slate-200">
                         <div class="inline-block w-8 h-8 border-4 border-slate-300 border-t-slate-800 rounded-full animate-spin mb-4"></div>
-                        <h4 class="text-lg font-bold text-slate-800 mb-1">결재 대기 중</h4>
-                        <p class="text-slate-600 text-sm">설정 가격: <span id="display-submitted-price" class="font-bold text-slate-900 text-base ml-1"></span> 원</p>
-                        <p class="text-xs text-slate-400 mt-4">타 부서의 의사결정과 경영진의 승인을 기다리고 있습니다...</p>
+                        <h4 class="text-lg font-bold text-slate-800 mb-1">시장 반응 대기 중</h4>
+                        <p class="text-slate-600 text-sm">고시 가격: <span id="display-submitted-price" class="font-bold text-slate-900 text-base ml-1"></span> 원</p>
+                        <p class="text-xs text-slate-400 mt-4">타 기업의 가격 고시 및 진행자의 턴 진행을 기다리고 있습니다...</p>
                         <button id="btn-student-cancel" class="mt-6 bg-white hover:bg-slate-100 text-slate-600 text-sm border border-slate-300 font-bold py-2 px-6 rounded-lg shadow-sm transition">
-                            상신 취소 및 재설정
+                            고시 취소 및 재설정
                         </button>
                     </div>
                 </div>
 
-                <!-- Previous Round Result -->
+                <!-- Previous Round Result with Download Button -->
                 <div id="previous-result" class="hidden workspace-card p-6 border-l-4 border-slate-400 bg-slate-50">
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Previous Quarter Results</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Previous Quarter Results</h3>
+                        <button id="btn-student-interim-download" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-1 px-3 rounded transition shadow-sm">
+                            이번 분기까지의 중간 보고서 다운로드
+                        </button>
+                    </div>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
                             <div class="text-xs text-slate-400 font-semibold mb-1">설정 가격</div>
@@ -393,7 +393,7 @@
         import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // Theme & Colors Mapping (Req 1 & 3)
+        // Theme & Colors Mapping 
         // ==========================================
         const TEAM_THEMES = {
             teacher: { bg: 'bg-slate-800', hover: 'hover:bg-slate-900', ring: 'focus:ring-slate-200', text: 'text-slate-800', border: 'border-slate-800', chart: '#1e293b' },
@@ -444,13 +444,14 @@
         // Game Logic Definition
         // ==========================================
         const TEAMS = [
-            { id: 'team1', name: '1조 (Red)' },
-            { id: 'team2', name: '2조 (Orange)' },
-            { id: 'team3', name: '3조 (Yellow)' },
-            { id: 'team4', name: '4조 (Green)' },
-            { id: 'team5', name: '5조 (Blue)' }
+            { id: 'team1', name: '1조 (Red 기업)' },
+            { id: 'team2', name: '2조 (Orange 기업)' },
+            { id: 'team3', name: '3조 (Yellow 기업)' },
+            { id: 'team4', name: '4조 (Green 기업)' },
+            { id: 'team5', name: '5조 (Blue 기업)' }
         ];
 
+        // 12 Rounds Scenarios
         const SCENARIOS = [
             { round: 1, title: "1분기: 비탄력적 시장 (필수재)", desc: "당사가 독점 개발한 신약입니다. 대체재가 전혀 없어 가격을 인상하여도 소비자 수요 감소폭이 매우 적습니다.", baseCost: 5000, calcQ: (P) => Math.max(0, 1500 - 0.05 * P), optimalPrice: "17,500원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.05 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 1,500 - 0.05P", epFormula: "| -0.05 × (P / Q) |", unitElasticPrice: "15,000원 (매출 극대화)" },
             { round: 2, title: "2분기: 탄력적 시장 (경쟁 치열)", desc: "경쟁사들이 유사한 음료 제품을 대량 출시했습니다. 소비자는 언제든 타사 제품으로 이탈할 수 있습니다.", baseCost: 5000, calcQ: (P) => Math.max(0, 6000 - 0.5 * P), optimalPrice: "8,500원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.5 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 6,000 - 0.5P", epFormula: "| -0.5 × (P / Q) |", unitElasticPrice: "6,000원 (매출 극대화)" },
@@ -461,10 +462,12 @@
             { round: 7, title: "7분기: 베블런 효과 (Veblen Effect)", desc: "한정판 명품 브랜드 라인업입니다. 가격이 상승할수록 과시욕에 의해 오히려 수요가 증가하는 특수 현상이 관측됩니다. (최대 생산량 2000개 제한)", baseCost: 10000, calcQ: (P) => Math.min(2000, Math.max(0, 500 + 0.02 * P)), optimalPrice: "75,000원", calcEp: (P, Q) => Q > 0 ? (Math.abs(0.02 * (P / Q)).toFixed(2) + " (베블런)") : "측정 불가", demandFuncStr: "Q = 500 + 0.02P (Max:2000)", epFormula: "| 0.02 × (P / Q) |", unitElasticPrice: "해당 없음" },
             { round: 8, title: "8분기: 공정 혁신 및 원가 절감", desc: "획기적인 공정 혁신으로 단위당 생산 원가가 1,000원으로 대폭락했습니다. 공격적인 프라이싱으로 시장을 장악하십시오.", baseCost: 1000, calcQ: (P) => Math.max(0, 5000 - 0.2 * P), optimalPrice: "13,000원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.2 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 5,000 - 0.2P", epFormula: "| -0.2 × (P / Q) |", unitElasticPrice: "12,500원 (매출 극대화)" },
             { round: 9, title: "9분기: 블라인드 탄력성 2", desc: "단서: '과거 가격을 5,000원에서 6,000원으로 조정 시 판매량이 2,000개에서 1,500개로 급감.' 최적의 이윤점을 도출하십시오.", baseCost: 2000, calcQ: (P) => Math.max(0, 4500 - 0.5 * P), optimalPrice: "5,500원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.5 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 4,500 - 0.5P", epFormula: "| -0.5 × (P / Q) |", unitElasticPrice: "4,500원 (매출 극대화)" },
-            { round: 10, title: "10분기: 최종 국면 (거대 시장)", desc: "마지막 회계연도입니다. 소비자의 반응이 민감한 거대한 시장이 개방되었습니다. 유종의 미를 거두십시오.", baseCost: 5000, calcQ: (P) => Math.max(0, 8000 - 0.3 * P), optimalPrice: "15,833원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.3 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 8,000 - 0.3P", epFormula: "| -0.3 × (P / Q) |", unitElasticPrice: "13,333원 (매출 극대화)" }
+            { round: 10, title: "10분기: 프리미엄 브랜드화 (비탄력적 시장 진입)", desc: "그동안의 마케팅 성공으로 강력한 브랜드 충성도가 형성되었습니다. 가격을 다소 올려도 소비자들은 쉽게 이탈하지 않습니다.", baseCost: 6000, calcQ: (P) => Math.max(0, 3000 - 0.1 * P), optimalPrice: "18,000원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.1 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 3,000 - 0.1P", epFormula: "| -0.1 × (P / Q) |", unitElasticPrice: "15,000원 (매출 극대화)" },
+            { round: 11, title: "11분기: 블라인드 탄력성 심화", desc: "새로운 고객층을 겨냥한 마케팅 데이터 단서: '과거 가격을 10,000원에서 8,000원으로 파격 인하 시, 판매량이 2,000개에서 2,500개로 500개 증가했습니다.' 가격을 재조정하십시오.", baseCost: 4000, calcQ: (P) => Math.max(0, 4500 - 0.25 * P), optimalPrice: "11,000원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.25 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 4,500 - 0.25P", epFormula: "| -0.25 × (P / Q) |", unitElasticPrice: "9,000원 (매출 극대화)" },
+            { round: 12, title: "12분기: 최종 국면 (글로벌 거대 시장)", desc: "마지막 회계연도입니다. 거대한 글로벌 시장이 개방되었으나 글로벌 대기업들의 진입으로 소비자의 가격 민감도 역시 상당히 높습니다. 유종의 미를 거두십시오.", baseCost: 5000, calcQ: (P) => Math.max(0, 15000 - 0.5 * P), optimalPrice: "17,500원", calcEp: (P, Q) => Q > 0 ? Math.abs(-0.5 * (P / Q)).toFixed(2) : "측정 불가", demandFuncStr: "Q = 15,000 - 0.5P", epFormula: "| -0.5 × (P / Q) |", unitElasticPrice: "15,000원 (매출 극대화)" }
         ];
 
-        const TOTAL_ROUNDS = 10;
+        const TOTAL_ROUNDS = 12;
         let currentRole = null; 
         let unsubscribeGameState = null;
         let unsubscribeTeams = null;
@@ -537,11 +540,11 @@
             
             document.getElementById('user-info').classList.remove('hidden');
             if (role === 'teacher') {
-                document.getElementById('user-info').innerText = "👨‍💼 관리자 계정";
+                document.getElementById('user-info').innerText = "👨‍💼 진행자 계정";
                 setupTeacherView();
             } else {
                 const teamName = TEAMS.find(t => t.id === role).name;
-                document.getElementById('user-info').innerText = `🏢 ${teamName} 계정`;
+                document.getElementById('user-info').innerText = `🏢 ${teamName}`;
                 setupStudentView();
             }
         });
@@ -580,7 +583,7 @@
             document.getElementById('teacher-round-badge').innerText = isGameOver ? "종료됨" : `Q${localGameState.round}`;
             document.getElementById('teacher-round-info').innerText = isGameOver ? "회계연도 전체 종료" : "현재 의사결정 대기중";
 
-            // Scenario Info Update with Detailed Info (Req 3)
+            // Scenario Info Update with Detailed Info
             const scenarioInfoEl = document.getElementById('teacher-scenario-info');
             if (!isGameOver && currentScenario) {
                 scenarioInfoEl.classList.remove('hidden');
@@ -591,7 +594,7 @@
                 scenarioInfoEl.classList.add('hidden');
             }
 
-            // Interim & Final Reports Download (Req 2)
+            // Interim & Final Reports Download (Teacher)
             const reportActionsEl = document.getElementById('teacher-report-actions');
             if (localGameState.round > 1) {
                 reportActionsEl.classList.remove('hidden');
@@ -624,7 +627,7 @@
                 
                 const theme = TEAM_THEMES[teamDef.id];
                 const statusColor = teamData.ready ? 'text-green-600 bg-green-50' : 'text-slate-500 bg-slate-100';
-                const statusIcon = teamData.ready ? '✓ 결재완료' : '대기중';
+                const statusIcon = teamData.ready ? '✓ 고시완료' : '대기중';
                 
                 grid.innerHTML += `
                     <div class="workspace-card p-4 text-center border-t-4 ${theme.border}">
@@ -645,14 +648,14 @@
             } else if (allReady && TEAMS.length > 0) {
                 btnNext.disabled = false;
                 btnNext.className = "w-full py-4 bg-slate-800 text-white font-bold rounded-xl shadow-md transition hover:bg-slate-900";
-                btnNext.innerText = "결과 산출 및 다음 분기 진행";
+                btnNext.innerText = "시장 결과 산출 및 다음 분기 진행";
             } else {
                 btnNext.disabled = true;
                 btnNext.className = "w-full py-4 bg-slate-300 text-slate-500 font-bold rounded-xl shadow-inner cursor-not-allowed";
-                btnNext.innerText = "각 부서(조) 결재 대기 중...";
+                btnNext.innerText = "각 기업의 의사결정 대기 중...";
             }
 
-            // Dual Leaderboards (Req 1)
+            // Dual Leaderboards
             // 1. Cumulative Leaderboard
             const sortedByCumulative = [...teamsList].sort((a, b) => b.cumulativeProfit - a.cumulativeProfit);
             const cumulativeBody = document.getElementById('leaderboard-cumulative-body');
@@ -697,7 +700,7 @@
                 quarterBody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-400">아직 정산된 분기 데이터가 없습니다.</td></tr>`;
             }
 
-            // Chart Update (Req 1 Colors)
+            // Chart Update
             const ctx = document.getElementById('ranking-chart').getContext('2d');
             const maxRoundChart = Math.max(localGameState.round - 1, 1);
             const labels = Array.from({length: maxRoundChart}, (_, i) => `Q${i + 1}`);
@@ -795,7 +798,7 @@
 
         document.getElementById('btn-download-logs').addEventListener('click', () => {
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
-            csvContent += "팀명,분기(라운드),설정가격,판매량,총매출,총비용,순이익,누적이익\n";
+            csvContent += "기업명,분기(라운드),설정가격,판매량,총매출,총비용,순이익,누적이익\n";
             TEAMS.forEach(teamDef => {
                 const data = localTeamsData[teamDef.id];
                 if (!data || !data.history) return;
@@ -919,9 +922,8 @@
             try { await updateDoc(getTeamRef(currentRole), { ready: false }); } catch (e) {}
         });
 
-
         // ==========================================
-        // Refactored Report Logic (Req 2 & 3)
+        // Refactored Report Logic
         // ==========================================
         const generateReportHTML = (teamInfo, teamData, isFinal) => {
             let rowsHTML = '';
@@ -1064,9 +1066,14 @@
             URL.revokeObjectURL(url);
         };
 
-        // Attach download event to student view button (always true for students as they see this only at the end)
+        // Attach download event to student view final download button
         document.getElementById('btn-student-download-report').addEventListener('click', () => {
             downloadReport(currentRole, true);
+        });
+
+        // Attach download event to student view interim download button
+        document.getElementById('btn-student-interim-download').addEventListener('click', () => {
+            downloadReport(currentRole, false);
         });
 
         // Initialize on load
