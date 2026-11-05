@@ -238,7 +238,7 @@
         </div>
     </div>
 
-    <script>
+  <script>
         const __app_id = "elasticy-game-01"; // 원하시는 게임 방 이름 아무거나
         const __firebase_config = JSON.stringify({
            apiKey: "AIzaSyDVAZXAgs_hGqR42Y3WY_uDHr1mQT-RGfA",
@@ -250,8 +250,6 @@
 
         });
     </script>
-
-
     <!-- Firebase & Application Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -293,7 +291,10 @@
                 baseCost: 5000,
                 calcQ: (P) => Math.max(0, 1500 - 0.05 * P),
                 optimalPrice: "17,500원",
-                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.05 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.05 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 1,500 - 0.05P",
+                epFormula: "| -0.05 × (P / Q) |",
+                unitElasticPrice: "15,000원 (총수입 극대화 지점)"
             },
             {
                 round: 2,
@@ -302,7 +303,10 @@
                 baseCost: 5000,
                 calcQ: (P) => Math.max(0, 6000 - 0.5 * P),
                 optimalPrice: "8,500원",
-                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.5 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.5 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 6,000 - 0.5P",
+                epFormula: "| -0.5 × (P / Q) |",
+                unitElasticPrice: "6,000원 (총수입 극대화 지점)"
             },
             {
                 round: 3,
@@ -311,7 +315,10 @@
                 baseCost: 8000,
                 calcQ: (P) => Math.max(0, 10000000 / Math.max(1, P)), // P*Q = 10,000,000
                 optimalPrice: "이론상 무한대 (가격을 최대한 높여야 함)",
-                calcEp: (P, Q) => "1.00 (단위 탄력적)"
+                calcEp: (P, Q) => "1.00 (단위 탄력적)",
+                demandFuncStr: "P × Q = 10,000,000",
+                epFormula: "항상 1 (직각쌍곡선 형태의 수요곡선)",
+                unitElasticPrice: "모든 가격에서 탄력성이 1임"
             },
             {
                 round: 4,
@@ -320,7 +327,10 @@
                 baseCost: 5000,
                 calcQ: (P) => Math.max(0, 1400 - 0.04 * P),
                 optimalPrice: "20,000원",
-                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.04 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.04 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 1,400 - 0.04P",
+                epFormula: "| -0.04 × (P / Q) |",
+                unitElasticPrice: "17,500원 (총수입 극대화 지점)"
             },
             {
                 round: 5,
@@ -329,7 +339,10 @@
                 baseCost: 4000,
                 calcQ: (P) => 800, // 고정 수요
                 optimalPrice: "이론상 무한대 (가격을 최대한 높여야 함)",
-                calcEp: (P, Q) => "0.00 (완전 비탄력적)"
+                calcEp: (P, Q) => "0.00 (완전 비탄력적)",
+                demandFuncStr: "Q = 800 (고정)",
+                epFormula: "0 (수요량 변화 없음)",
+                unitElasticPrice: "존재하지 않음 (항상 0)"
             },
             {
                 round: 6,
@@ -338,7 +351,10 @@
                 baseCost: 6000,
                 calcQ: (P) => Math.max(0, 12000 - 0.8 * P),
                 optimalPrice: "10,500원",
-                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.8 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.8 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 12,000 - 0.8P",
+                epFormula: "| -0.8 × (P / Q) |",
+                unitElasticPrice: "7,500원 (총수입 극대화 지점)"
             },
             {
                 round: 7,
@@ -347,7 +363,10 @@
                 baseCost: 10000,
                 calcQ: (P) => Math.min(2000, Math.max(0, 500 + 0.02 * P)), // 최대 판매량 2000개 제한
                 optimalPrice: "75,000원",
-                calcEp: (P, Q) => Q > 0 ? (Math.abs(0.02 * (P / Q)).toFixed(2) + " (베블런 효과)") : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? (Math.abs(0.02 * (P / Q)).toFixed(2) + " (베블런 효과)") : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 500 + 0.02P (단, 최대 2000개)",
+                epFormula: "| 0.02 × (P / Q) |",
+                unitElasticPrice: "존재하지 않음"
             },
             {
                 round: 8,
@@ -356,7 +375,10 @@
                 baseCost: 1000,
                 calcQ: (P) => Math.max(0, 5000 - 0.2 * P),
                 optimalPrice: "13,000원",
-                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.2 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.2 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 5,000 - 0.2P",
+                epFormula: "| -0.2 × (P / Q) |",
+                unitElasticPrice: "12,500원 (총수입 극대화 지점)"
             },
             {
                 round: 9,
@@ -365,7 +387,10 @@
                 baseCost: 2000,
                 calcQ: (P) => Math.max(0, 4500 - 0.5 * P),
                 optimalPrice: "5,500원",
-                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.5 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.5 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 4,500 - 0.5P",
+                epFormula: "| -0.5 × (P / Q) |",
+                unitElasticPrice: "4,500원 (총수입 극대화 지점)"
             },
             {
                 round: 10,
@@ -374,7 +399,10 @@
                 baseCost: 5000,
                 calcQ: (P) => Math.max(0, 8000 - 0.3 * P),
                 optimalPrice: "15,833원",
-                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.3 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)"
+                calcEp: (P, Q) => Q > 0 ? Math.abs(-0.3 * (P / Q)).toFixed(2) : "측정 불가 (수요 0)",
+                demandFuncStr: "Q = 8,000 - 0.3P",
+                epFormula: "| -0.3 × (P / Q) |",
+                unitElasticPrice: "13,333원 (총수입 극대화 지점)"
             }
         ];
 
@@ -837,7 +865,8 @@
                             extraReason = "\n\n[적자 원인]\n설정한 가격이 단위당 생산 원가보다 낮아 팔수록 손해를 보았습니다.";
                         }
 
-                        const popupMsg = `이번 라운드 이윤: ${formatMoney(r.profit)}원\n\n[수익 계산식]\n(가격 × 판매량) - 총비용 = 이윤\n${formula}\n\n[경제학적 분석]\n- 설정하신 가격에서의 수요의 가격탄력성: ${epValue}\n- 이윤 극대화 최적 가격: ${optPrice}${extraReason}`;
+                        const scenarioDef = SCENARIOS[r.round-1];
+                        const popupMsg = `이번 라운드 이윤: ${formatMoney(r.profit)}원\n\n[수익 계산식]\n(가격 × 판매량) - 총비용 = 이윤\n${formula}\n\n[경제학적 분석]\n- 이번 라운드의 수요 함수: ${scenarioDef.demandFuncStr}\n- 탄력성 계산식 ( E = |(dQ/dP) × (P/Q)| ): ${scenarioDef.epFormula}\n- 단위탄력적(E=1)이 되는 가격: ${scenarioDef.unitElasticPrice}\n- 설정하신 가격에서의 수요의 가격탄력성: ${epValue}\n- 이윤 극대화 최적 가격: ${optPrice}${extraReason}`;
                         
                         // UI 업데이트가 화면에 반영될 수 있도록 짧은 지연 후 팝업 띄우기
                         setTimeout(() => {
