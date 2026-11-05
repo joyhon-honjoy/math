@@ -43,7 +43,10 @@
 
         <!-- Login View -->
         <div id="login-view" class="hidden max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg border border-slate-200 mt-10">
-            <h2 class="text-2xl font-bold mb-6 text-center text-indigo-700">게임 접속</h2>
+            <div class="text-center mb-6">
+                <p class="text-sm font-bold text-indigo-500 mb-2">현대고등학교 2026학년도 2학기 경제수학 수행평가</p>
+                <h2 class="text-2xl font-bold text-indigo-700">게임 접속</h2>
+            </div>
             <div class="space-y-6">
                 <div>
                     <label class="block text-sm font-semibold mb-2 text-slate-700">역할 선택</label>
@@ -230,9 +233,8 @@
             <button id="modal-close" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl">확인</button>
         </div>
     </div>
- 
 
- <script>
+    <script>
         const __app_id = "elasticy-game-01"; // 원하시는 게임 방 이름 아무거나
         const __firebase_config = JSON.stringify({
            apiKey: "AIzaSyDVAZXAgs_hGqR42Y3WY_uDHr1mQT-RGfA",
@@ -244,6 +246,7 @@
 
         });
     </script>
+
 
     <!-- Firebase & Application Logic -->
     <script type="module">
