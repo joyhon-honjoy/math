@@ -513,7 +513,7 @@
                 batch.update(getGameStateRef(), { round: nextRound });
 
                 await batch.commit();
-                showModal("성공", `${localGameState.round}라운드 정산 완료!`);
+                showModal("성공", `${localGameState.round -1}라운드 정산 완료!`);
 
             } catch (error) {
                 console.error("Error advancing turn:", error);
